@@ -1,14 +1,16 @@
 import json
+
 from prompt_toolkit import prompt
 from langchain_core.tools import tool
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
-from langchain.chains import LLMChain
-from langchain.schema import HumanMessage, SystemMessage, AIMessage
+from langchain_core.runnables import RunnableConfig
+from langchain.schema import HumanMessage
 from langchain_ollama import ChatOllama
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain.memory import ConversationBufferMemory
+from langgraph.prebuilt import create_react_agent
+from langgraph.checkpoint.memory import InMemorySaver
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
+
 
 engine = create_engine("postgresql://postgres:postgres@localhost/postgres")
 
@@ -24,7 +26,9 @@ Guidelines:
    - Always verify existence of tables and columns in the schema.
    - Assume the `public` schema if none is specified.  
 3. Tool Use: 
-   - To execute a query, call `exec_sql_query`.  
+   - Tool do not support psql commands like "\\d" or "\\dt", it only supports valid SQL query.
+   - Tool do not support multiple SQL statements, use single SQL statement per tool call.
+   - To execute a query, call `exec_sql_query`.   
    - Input: `query` (SQL string) and `fetch_results` (boolean, default is False). 
    - For write/update statements, omit `fetch_results`.
    - For select statements, always inlcude `fetch_results=True` to gather results.
@@ -36,6 +40,12 @@ Guidelines:
 5. Behavior:
    - Do not provide speculative answers, fact check using SQL queries. 
    - Keep answers accurate, concise, and SQL-backed.
+"""
+
+bootstrap_prompt = """
+Examine the public schema of current database using the `exec_sql_query` tool.:
+* Examine following resources: tables, views, and columns.
+* Use resources schema for generating, planning, and executing of SQL queries.
 """
 
 
@@ -58,7 +68,7 @@ def exec_sql_query(query: str = "", fetch_results: bool = False):
         query (str): The SQL query to execute.
         fetch_results (bool): Whether to fetch results from the query.
     """
-    print("?", query)
+    print("+", query)
     try:
         with engine.connect() as conn:
             conn.execution_options(isolation_level="AUTOCOMMIT")
@@ -73,35 +83,37 @@ def exec_sql_query(query: str = "", fetch_results: bool = False):
         return json.dumps({"status": "error", "error": str(e)})
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":    
     model = ChatOllama(model="qwen2.5:14b")
+    memory = InMemorySaver()
     tools = [exec_sql_query]
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
-    llm_prompt = ChatPromptTemplate.from_messages([
-        SystemMessage(content=system_prompt),
-        MessagesPlaceholder(variable_name="chat_history"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-        HumanMessagePromptTemplate.from_template("{input}"),
-    ])
+    agent = create_react_agent(
+        model=model,
+        tools=tools,
+        prompt=system_prompt,
+        checkpointer=memory,
+    )
 
-    agent = create_tool_calling_agent(model, tools, llm_prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+    config = RunnableConfig()
+    config["configurable"] = {"thread_id": "1"}
 
     print("Welcome to the PostgreSQL CLI tool, type 'exit' to quit.")
-    print("Allow me some time to lookup the database schema...")
-    
-    agent_executor.invoke({"input": "List all tables and their columns in the public schema and memorize them."})
-    print("Finished looking up the schema, please ask me a question.")
+    print("<", "Allow me some time to lookup the database schema...")
+
+    agent.invoke({"messages": [HumanMessage(content=bootstrap_prompt)]}, config)
+    print("<", "Finished looking up the schema, please ask me a question!")
+
     while True:
         try:
             user_input = prompt("> ")
             if user_input.lower().strip() == "exit":
                 break
 
-            resp = agent_executor.invoke({"input": user_input})
-            print("<", resp["output"])
-        except (KeyboardInterrupt, EOFError):        
+            resp = agent.invoke({"messages": [HumanMessage(content=user_input)]}, config)
+            print("<", resp["messages"][-1].text())
+
+        except (KeyboardInterrupt, EOFError):
             break
 
     print("Goodbye!")
