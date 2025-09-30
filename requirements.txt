@@ -1,0 +1,8 @@
+langchain==0.3.27
+langchain-community==0.3.30
+langchain-ollama==0.3.8
+ollama==0.6.0
+langgraph==0.6.7
+SQLAlchemy==2.0.43
+psycopg2-binary==2.9.10
+rich==14.1.0
