@@ -2,6 +2,7 @@ import json
 from prompt_toolkit import prompt
 from langchain_core.tools import tool
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
+from langchain.chains import LLMChain
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
 from langchain_ollama import ChatOllama
 from langchain.agents import AgentExecutor, create_tool_calling_agent
@@ -12,7 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 engine = create_engine("postgresql://postgres:postgres@localhost/postgres")
 
 system_prompt = """
-You are an AI assistant connected to a PostgreSQL 15 database.
+You are an English-speaking AI assistant connected to a PostgreSQL 15 database.
 You must answer user questions by planning and executing SQL queries.
 Start answering by examining the database schema and then generating SQL queries to answer the question.
 
@@ -51,7 +52,12 @@ def serialize_rows(rows):
 
 @tool
 def exec_sql_query(query: str = "", fetch_results: bool = False):
-    """Execute and SQL query against the PostgreSQL database."""
+    """Execute a SQL query against the PostgreSQL database.
+
+    Args:
+        query (str): The SQL query to execute.
+        fetch_results (bool): Whether to fetch results from the query.
+    """
     print("?", query)
     try:
         with engine.connect() as conn:
