@@ -1,6 +1,7 @@
 # Dead simple PostgreSQL agent
 
-The quick implementation of dead simple agent which helps 
+The quick implementation of dead simple agent which helps querying the PostgreSQL database.
+The agent has interactions memory and can be used fun playground (see sample questions below).
 
 The code was been tested using following:
 
