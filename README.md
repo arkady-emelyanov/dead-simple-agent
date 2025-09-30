@@ -77,7 +77,6 @@ User `dave` has the longest email address, followed by user `eve`.
 | 3       | charlie  | 2             |
 
 User `alice` owns the most projects with a total of 3, followed by user `charlie` with 2 projects.
->
 ```
 
 Quite cool.
