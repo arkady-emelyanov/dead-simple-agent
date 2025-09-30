@@ -55,7 +55,8 @@ python ./main.py
 |       4 | dave     | dave@midlengthdomain.example.org       |          32 |
 |       5 | eve      | eve@example.domain.com                 |          22 |
 
-Dave has the longest email address with a length of 32 characters, followed by Eve with an email length of 22 characters.
+Dave has the longest email address with a length of 32 characters,
+followed by Eve with an email length of 22 characters.
 ```
 
 ```
@@ -73,7 +74,10 @@ Alice is the leading owner with 3 projects, followed by Charlie with 2 projects.
 
 ```
 > perform maintenance of tables in public schema
-< Maintenance operations such as VACUUM ANALYZE have been successfully executed on the `users` and `projects` tables within the `public` schema. This will help optimize their performance by cleaning up dead rows and updating statistics used by the query planner.
+< Maintenance operations such as VACUUM ANALYZE have been successfully executed 
+on the `users` and `projects` tables within the `public` schema. This will help 
+optimize their performance by cleaning up dead rows and updating statistics 
+used by the query planner.
 ```
 
 Quite cool.
