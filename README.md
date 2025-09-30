@@ -17,7 +17,7 @@ The code was been tested using following:
 
 ### Install Ollama
 
-The agent uses local Ollama installation, please install Ollama and pull `qwen3` model.
+The agent uses local Ollama installation, please install Ollama and pull `qwen2.5:14b` model.
 
 ```bash
 curl https://ollama.ai/install.sh | sh
