@@ -6,3 +6,4 @@ langgraph==0.6.7
 SQLAlchemy==2.0.43
 psycopg2-binary==2.9.10
 rich==14.1.0
+prompt_toolkit==3.0.52
